@@ -30,17 +30,18 @@ fun main() {
 object Params {
     const val idealRate = 1.10
     const val bankErrorRange = 0.1
-    const val minClientReliability = 0.1
+    const val minClientReliability = 0.5
     const val maxClientReliability = 1.0
     const val minClientRequest = 1000.0
     const val maxClientRequest = 2000.0
     const val averageRequest = (minClientRequest + maxClientRequest) / 2
     const val clientsPerTimeUnit = 10000
-    const val timeUnits = 1000
+    const val timeUnits = 100
 }
 
 //fun expectedMoney(turn: Int) = Params.averageRequest * Params.clientsPerTimeUnit * pow(Params.idealRate, turn + 1)
-fun expectedMoney(turn: Int) = Params.averageRequest * Params.clientsPerTimeUnit * ((Params.idealRate - 1) * (turn + 1) + 1)
+fun expectedMoney(turn: Int) =
+    Params.averageRequest * Params.clientsPerTimeUnit * ((Params.idealRate - 1) * (turn + 1) + 1)
 
 class Bank {
     private var money: Double = Params.averageRequest * Params.clientsPerTimeUnit
@@ -53,12 +54,12 @@ class Bank {
     val rateHistory = mutableListOf<Double>()
 
     fun makeDeal(client: Client) {
-        val requestedReturns = client.requestedMoney / client.estimatedReliability * rate
+        val requestedReturns = (client.requestedMoney / client.estimatedReliability) * rate
         money += client.getOutcome(requestedReturns)
     }
 
     fun finishTimeUnit() {
-        val expectedMoney = expectedMoney(moneyHistory.size)
+        val expectedMoney = expectedMoney(moneyHistory.size + 1)
         println("ratio: ${expectedMoney / money}")
         println("expectedMoney = ${expectedMoney}")
         println("money = ${money}")
@@ -79,6 +80,8 @@ class Client(val requestedMoney: Double, private val realReliability: Double) {
         )
     }
 
-    fun getOutcome(requestedReturns: Double) =
-        if (Random.nextDouble() < realReliability) requestedReturns else -requestedMoney
+    fun getOutcome(requestedReturns: Double): Double {
+        val nextDouble = Random.nextDouble()
+        return if (nextDouble < realReliability) requestedReturns - requestedMoney else -requestedMoney
+    }
 }
