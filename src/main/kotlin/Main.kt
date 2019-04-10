@@ -3,10 +3,7 @@ import kotlin.math.min
 import kotlin.random.Random
 import koma.*
 
-
 fun main() {
-    val bank = Bank()
-
     val clientGenerator = {
         Client(
             Random.nextDouble(Params.minClientRequest, Params.maxClientRequest),
@@ -15,16 +12,19 @@ fun main() {
     }
 
     repeat(Params.timeUnits) {
-        generateSequence(clientGenerator).take(Params.clientsPerTimeUnit).forEach(bank::makeDeal)
-        bank.finishTimeUnit()
+        generateSequence(clientGenerator).take(Params.clientsPerTimeUnit).forEach(Bank::makeDeal)
+        Bank.finishTimeUnit()
     }
 
     figure(1)
-    plot(bank.rateHistory.toDoubleArray())
+    plot(Bank.rateHistory.toDoubleArray())
+    xlabel("Time Units Passed")
+    ylabel("Bank rate")
 
     figure(2)
-    plot(bank.normalizedMoneyHistory.toDoubleArray())
-
+    plot(Bank.normalizedMoneyHistory.toDoubleArray())
+    xlabel("Time Units Passed")
+    ylabel("Normalized money")
 }
 
 object Params {
@@ -34,19 +34,19 @@ object Params {
     const val maxClientReliability = 1.0
     const val minClientRequest = 1000.0
     const val maxClientRequest = 2000.0
-    const val averageRequest = (minClientRequest + maxClientRequest) / 2
     const val clientsPerTimeUnit = 10000
     const val timeUnits = 100
+    const val averageRequest = (minClientRequest + maxClientRequest) / 2
+    const val startMoney = Params.averageRequest * Params.clientsPerTimeUnit
 }
 
-//fun expectedMoney(turn: Int) = Params.averageRequest * Params.clientsPerTimeUnit * pow(Params.idealRate, turn + 1)
 fun expectedMoney(turn: Int) =
-    Params.averageRequest * Params.clientsPerTimeUnit * ((Params.idealRate - 1) * (turn + 1) + 1)
+    Params.startMoney * ((Params.idealRate - 1) * (turn + 1) + 1)
 
-class Bank {
-    private var money: Double = Params.averageRequest * Params.clientsPerTimeUnit
+object Bank {
+    private var money: Double = Params.startMoney
     private var rate: Double = Params.idealRate
-    val moneyHistory = mutableListOf<Double>()
+    private val moneyHistory = mutableListOf<Double>()
     val normalizedMoneyHistory: List<Double>
         get() = moneyHistory.mapIndexed { index, d ->
             d / expectedMoney(index)
@@ -60,15 +60,9 @@ class Bank {
 
     fun finishTimeUnit() {
         val expectedMoney = expectedMoney(moneyHistory.size + 1)
-        println("ratio: ${expectedMoney / money}")
-        println("expectedMoney = ${expectedMoney}")
-        println("money = ${money}")
         moneyHistory += money
         rateHistory += rate
-//        rate = (rate - 1) * expectedMoney / money + 1
-//        rate = rate * expectedMoney / money
         rate = (Params.averageRequest - (money - expectedMoney) / Params.clientsPerTimeUnit) / Params.averageRequest
-        println("rate = ${rate}")
     }
 }
 
@@ -80,8 +74,6 @@ class Client(val requestedMoney: Double, private val realReliability: Double) {
         )
     }
 
-    fun getOutcome(requestedReturns: Double): Double {
-        val nextDouble = Random.nextDouble()
-        return if (nextDouble < realReliability) requestedReturns - requestedMoney else -requestedMoney
-    }
+    fun getOutcome(requestedReturns: Double) =
+        if (Random.nextDouble() < realReliability) requestedReturns - requestedMoney else -requestedMoney
 }
