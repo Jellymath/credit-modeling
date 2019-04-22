@@ -59,7 +59,7 @@ object Params {
     const val clientsPerTimeUnit = 10000
     const val timeUnits = 100
     const val averageRequest = (minClientRequest + maxClientRequest) / 2
-    const val startMoney = Params.averageRequest * Params.clientsPerTimeUnit
+    const val startMoney = averageRequest * clientsPerTimeUnit
 }
 
 fun expectedMoney(turn: Int) =
