@@ -2,6 +2,9 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 import koma.*
+import org.nield.kotlinstatistics.median
+import org.nield.kotlinstatistics.percentile
+import org.nield.kotlinstatistics.variance
 
 fun main() {
     val clientGenerator = {
@@ -16,15 +19,34 @@ fun main() {
         Bank.finishTimeUnit()
     }
 
-    figure(1)
-    plot(Bank.rateHistory.toDoubleArray())
-    xlabel("Time Units Passed")
-    ylabel("Bank rate")
+    with(Bank.rateHistory) {
+        println("Rate median is ${median()}")
+        println("Rate variance is ${variance()}")
+        println("Rate 5th percentile is ${percentile(5.0)}")
+        println("Rate 95th percentile is ${percentile(95.0)}")
+        println("Rate minimum is ${min()}")
+        println("Rate maximum is ${max()}")
 
-    figure(2)
-    plot(Bank.normalizedMoneyHistory.toDoubleArray())
-    xlabel("Time Units Passed")
-    ylabel("Normalized money")
+        figure(1)
+        plot(toDoubleArray())
+        xlabel("Time Units Passed")
+        ylabel("Bank rate")
+    }
+    println()
+
+    with(Bank.normalizedMoneyHistory) {
+        println("Normalized money median is ${median()}")
+        println("Normalized money variance is ${variance()}")
+        println("Normalized money 5th percentile is ${percentile(5.0)}")
+        println("Normalized money 95th percentile is ${percentile(95.0)}")
+        println("Normalized money minimum is ${min()}")
+        println("Normalized money maximum is ${max()}")
+
+        figure(2)
+        plot(toDoubleArray())
+        xlabel("Time Units Passed")
+        ylabel("Normalized money")
+    }
 }
 
 object Params {
